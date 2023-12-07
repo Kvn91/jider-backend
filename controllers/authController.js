@@ -2,12 +2,10 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
-const fsPromises = require('fs').promises;
-const path = require('path');
 
 const handleLogin = async (req, res) => {
+    const cookies = req.cookies;
     const { user, pwd } = req.body;
-
     if (!user) return res.status(400).json({ message: "Username is required" });
     if (!pwd) return res.status(400).json({ message: "Password is required" });
 
@@ -27,20 +25,48 @@ const handleLogin = async (req, res) => {
                 }
             },
             process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: "10m" }
+            { expiresIn: "15m" }
         )
         // Create refresh token
-        const refreshToken = jwt.sign(
+        let newRefreshToken = jwt.sign(
             { username: foundUser.username },
             process.env.REFRESH_TOKEN_SECRET,
             { expiresIn: "1d" }
         )
-        // Save refreshToken with current user
-        await User.updateOne({ username: user }, {refreshToken}).exec();
 
+        const newRefreshTokenArray = 
+            !cookies?.jwt
+                ? foundUser.refreshToken
+                : foundUser.refreshToken.filter(token => token !== cookies.jwt)
+        ;
+        
+        if (cookies?.jwt) {
+            /* 
+            Scenario added here: 
+                1) User logs in but never uses RT and does not logout (token is kept in his cookies)
+                2) RT is stolen, and a compromised user is trying to log in with it
+                3) If 1 & 2, reuse detection is needed to clear all RTs when user logs in
+            */
+            const refreshToken = cookies.jwt;
+            const foundToken = await User.findOne({ refreshToken }).exec();
+
+            // Detected refresh token reuse!
+            if (!foundToken) {
+                // clear out ALL previous refresh tokens
+                newRefreshTokenArray = [];
+            }
+
+            res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true });
+        }
+
+        // Save refreshToken with current user
+        foundUser.refreshToken = [...newRefreshTokenArray, newRefreshToken];
+        await foundUser.save();
+
+        // Creates secured cookie with refresh token
         res.cookie(
             'jwt', 
-            refreshToken, 
+            newRefreshToken, 
             { 
                 httpOnly: true, 
                 sameSite: 'None',
