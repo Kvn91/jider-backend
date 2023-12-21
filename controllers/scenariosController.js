@@ -1,60 +1,81 @@
 const Scenario = require('../models/Scenario');
 
+// @desc Get all scenarios
+// @route GET /scenarios
+// @access Private
 const getAllScenarios = async (req, res) => {
-    const scenarios = await Scenario.find().exec();
-    if (!scenarios) return res.status(204).json({ message: "No scenarios found !" });
+    const scenarios = await Scenario.find().lean();
+    if (!scenarios?.length) return res.status(400).json({ message: 'Aucun scénario !' });
 
     res.json(scenarios);
 }
 
+// @desc Get one scenario
+// @route GET /scenarios/:id
+// @access Private
 const getScenario = async (req, res) => {
-    if (!req?.params?.id) return res.status(400).json({ message: "ID is required" });
+    if (!req?.params?.id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
 
     const scenario = await Scenario.findOne({_id: req.params.id}).exec();
-    if (!scenario) return res.status(204).json({ message: `Scenario ${req.params.id} not found`});
+    if (!scenario) return res.status(204).json({ message: `Scénario ${req.params.id} introuvable`});
 
     res.json(scenario);
 }
 
+// @desc Create a scenario
+// @route POST /scenarios
+// @access Private
 const createScenario = async (req, res) => {
     let errors = [];
-    if (!req?.body?.name) errors.push('Name is required');
-    if (!req?.body?.description) errors.push('Description is required');
+    
+    if (!req?.body?.title) errors.push('Le titre est requis');
+    if (!req?.body?.description) errors.push('La description est requise');
+
     if (errors.length > 0) return res.status(400).json({ errors });
 
-    try {
-        const result = await Scenario.create({
-            name: req.body.name,
-            description: req.body.description
-        })
+    const scenario = await Scenario.create({
+        title: req.body.title,
+        description: req.body.description
+    })
 
-        res.status(201).json(result);
-    } catch (error) {
-        console.error(error);
+    if (scenario) { // Created 
+        return res.status(201).json({ message: 'Nouveau scenario créé' })
+    } else {
+        return res.status(400).json({ message: 'Données de scénario invalides' })
     }
 }
 
+// @desc Update a scenario
+// @route PUT /scenarios
+// @access Private
 const updateScenario = async (req, res) => {
-    if (!req?.body?.id) return res.status(400).json({ message: "ID is required" });
+    const { id, title, description } = req.body;
+    if (!id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
 
-    const scenario = await Scenario.findOne({_id: req.body.id}).exec();
-    if (!scenario) return res.status(204).json({ message: `Scenario ${req.body.id} not found`});
+    const scenario = await Scenario.findById(id).exec()
+    if (!scenario) return res.status(204).json({ message: 'Scénario introuvable' });
         
-    if (req.body.name) scenario.name = req.body.name;
-    if (req.body.description) scenario.description = req.body.description;
-    const result = await scenario.save();
+    if (title) scenario.title = title;
+    if (description) scenario.description = description;
 
-    res.json(result );
+    await scenario.save();
+
+    res.json('Scénario mis à jour');
 }
 
+// @desc Delete a scenario
+// @route DELETE /scenarios
+// @access Private
 const deleteScenario = async (req, res) => {
-    if (!req?.body?.id) return res.status(400).json({ message: "ID is required" });
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
     
     const scenario = await Scenario.findOne({_id: req.body.id}).exec();
-    if (!scenario) return res.status(204).json({ message: `Scenario ${req.body.id} not found`});
+    if (!scenario) return res.status(204).json({ message: 'Scénario introuvable'});
 
-    const result = await Scenario.deleteOne({ _id: req.body.id });
-    res.json(result);
+    await scenario.deleteOne();
+
+    res.json('Scénario supprimé !');
 }
 
 module.exports = {

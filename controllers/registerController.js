@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
+// @desc Handle the registration
+// @route POST /register
 const handleNewUser = async (req, res) => {
     const { user, pwd } = req.body;
 

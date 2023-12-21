@@ -1,8 +1,9 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Handle refreshing of the access token and the refresh token
+// @desc Handle refreshing of the access token and the refresh token
 // when the access token has expired
+// @route POST /refresh
 const handleRefreshToken = async (req, res) => {
     const cookies = req.cookies;
 

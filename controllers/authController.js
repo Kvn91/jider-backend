@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
 
+// @desc Handle the login
+// @route POST /auth
 const handleLogin = async (req, res) => {
     const cookies = req.cookies;
     const { user, pwd } = req.body;
