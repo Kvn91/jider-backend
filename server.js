@@ -14,7 +14,6 @@ const connectDb = require('./config/dbConnection');
 const corsOptions = require('./config/corsOptions');
 const sslOptions = require('./config/ssl/sslOptions');
 
-const credentials = require('./middleware/credentials');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./middleware/logEvents').logger;
 const verifyJWT = require('./middleware/verifyJWT');
@@ -27,10 +26,6 @@ connectDb();
 
 // Apply custom logger
 app.use(logger);
-
-// Handle options credentials check - before CORS
-// and fetch cookies credentials requirement
-app.use(credentials);
 
 // Apply CORS
 app.use(cors(corsOptions));
@@ -54,7 +49,7 @@ app.use('/auth', require('./routes/auth'));
 app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 // Apply authentication
-app.use(verifyJWT);
+// app.use(verifyJWT);
 app.use('/scenarios', require('./routes/api/scenarios'));
 
 app.all('*', (req, res) => {
@@ -74,4 +69,9 @@ mongoose.connection.once('open', () => {
     console.log('Connected to MongoDB');
     // http.createServer(app).listen(PORT, () => console.log(`Server running on PORT ${PORT}`))
     https.createServer({...sslOptions}, app).listen(PORT_HTTPS, () => console.log(`Server running on PORT ${PORT_HTTPS}`))
-});
+})
+
+mongoose.connection.on('error', err => {
+    console.error(err)
+    logEvents(`${err.no}: ${err.code}\t${err.syscall}\t${err.hostname}`, 'mongoErrLog.log')
+})
