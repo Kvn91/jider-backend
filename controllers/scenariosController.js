@@ -5,7 +5,7 @@ const Scenario = require('../models/Scenario');
 // @access Private
 const getAllScenarios = async (req, res) => {
     const scenarios = await Scenario.find().lean();
-    if (!scenarios?.length) return res.status(400).json({ message: 'Aucun scénario !' });
+    if (!scenarios?.length) return res.status(200).json({ message: 'Aucun scénario !' });
 
     res.json(scenarios);
 }
