@@ -16,7 +16,9 @@ const getAllScenarios = async (req, res) => {
 const getScenario = async (req, res) => {
     if (!req?.params?.id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
 
-    const scenario = await Scenario.findOne({_id: req.params.id}).exec();
+    // @TODO use "_id"
+    // const scenario = await Scenario.findOne({_id: req.params.id}).exec();
+    const scenario = await Scenario.findOne({id: req.params.id}).exec();
     if (!scenario) return res.status(204).json({ message: `Scénario ${req.params.id} introuvable`});
 
     res.json(scenario);
@@ -28,12 +30,14 @@ const getScenario = async (req, res) => {
 const createScenario = async (req, res) => {
     let errors = [];
     
+    if (!req?.body?.id) errors.push('Un ID est requis');
     if (!req?.body?.title) errors.push('Le titre est requis');
     if (!req?.body?.description) errors.push('La description est requise');
 
     if (errors.length > 0) return res.status(400).json({ errors });
 
     const scenario = await Scenario.create({
+        id: req.body.id,
         title: req.body.title,
         description: req.body.description
     })
@@ -70,7 +74,9 @@ const deleteScenario = async (req, res) => {
     const { id } = req.body;
     if (!id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
     
-    const scenario = await Scenario.findOne({_id: req.body.id}).exec();
+    // @TODO use "_id"
+    // const scenario = await Scenario.findOne({_id: req.body.id}).exec();
+    const scenario = await Scenario.findOne({id: req.body.id}).exec();
     if (!scenario) return res.status(204).json({ message: 'Scénario introuvable'});
 
     await scenario.deleteOne();
