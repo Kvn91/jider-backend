@@ -19,7 +19,7 @@ const getScenario = async (req, res) => {
     // @TODO use "_id"
     // const scenario = await Scenario.findOne({_id: req.params.id}).exec();
     const scenario = await Scenario.findOne({id: req.params.id}).exec();
-    if (!scenario) return res.status(204).json({ message: `Scénario ${req.params.id} introuvable`});
+    if (!scenario) return res.status(404).json({ message: `Scénario ${req.params.id} introuvable`});
 
     res.json(scenario);
 }
@@ -56,8 +56,8 @@ const updateScenario = async (req, res) => {
     const { id, title, description } = req.body;
     if (!id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
 
-    const scenario = await Scenario.findById(id).exec()
-    if (!scenario) return res.status(204).json({ message: 'Scénario introuvable' });
+    const scenario = await Scenario.findOne({ id }).exec()
+    if (!scenario) return res.status(404).json({ message: `Scénario ${id} introuvable`});
         
     if (title) scenario.title = title;
     if (description) scenario.description = description;
@@ -77,7 +77,7 @@ const deleteScenario = async (req, res) => {
     // @TODO use "_id"
     // const scenario = await Scenario.findOne({_id: req.body.id}).exec();
     const scenario = await Scenario.findOne({id: req.body.id}).exec();
-    if (!scenario) return res.status(204).json({ message: 'Scénario introuvable'});
+    if (!scenario) return res.status(404).json({ message: 'Scénario introuvable'});
 
     await scenario.deleteOne();
 
