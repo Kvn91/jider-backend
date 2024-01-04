@@ -15,7 +15,7 @@ const getAllScenarios = async (req, res) => {
 // @access Private
 const getScenario = async (req, res) => {
     if (!req?.params?.id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
-    if (!Number.isInteger(req.params.id)) return res.status(400).json({ message: 'Le paramètre ID est au mauvais format' });
+    if (!Number.isInteger(Number(req.params.id))) return res.status(400).json({ message: 'Le paramètre ID est au mauvais format' });
 
     // @TODO use "_id"
     // const scenario = await Scenario.findOne({_id: req.params.id}).exec();
