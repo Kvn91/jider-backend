@@ -44,9 +44,9 @@ const createScenario = async (req, res) => {
     })
 
     if (scenario) { // Created 
-        return res.status(201).json({ message: 'Nouveau scenario créé' })
+        return res.status(201).json(scenario);
     } else {
-        return res.status(400).json({ message: 'Données de scénario invalides' })
+        return res.status(400).json({ message: 'Données de scénario invalides' });
     }
 }
 
