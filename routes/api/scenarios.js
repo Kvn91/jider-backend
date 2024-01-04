@@ -11,11 +11,11 @@ router.route('/')
     // .delete(verifyRoles(ROLES_LIST.Admin), scenariosController.deleteScenario)
     .post(scenariosController.createScenario)
     .put(scenariosController.updateScenario)
-    .delete(scenariosController.deleteScenario)
 ;
 
 router.route('/:id')
     .get(scenariosController.getScenario)
+    .delete(scenariosController.deleteScenario)
 ;
 
 module.exports = router;

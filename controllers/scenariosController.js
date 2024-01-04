@@ -69,15 +69,15 @@ const updateScenario = async (req, res) => {
 }
 
 // @desc Delete a scenario
-// @route DELETE /scenarios
+// @route DELETE /scenarios/id
 // @access Private
 const deleteScenario = async (req, res) => {
-    const { id } = req.body;
-    if (!id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
+    if (!req?.params?.id) return res.status(400).json({ message: 'Le paramètre ID est requis' });
+    if (!Number.isInteger(Number(req.params.id))) return res.status(400).json({ message: 'Le paramètre ID est au mauvais format' });
     
     // @TODO use "_id"
-    // const scenario = await Scenario.findOne({_id: req.body.id}).exec();
-    const scenario = await Scenario.findOne({id: req.body.id}).exec();
+    // const scenario = await Scenario.findOne({_id: req.params.id}).exec();
+    const scenario = await Scenario.findOne({id: req.params.id}).exec();
     if (!scenario) return res.status(404).json({ message: 'Scénario introuvable'});
 
     await scenario.deleteOne();
