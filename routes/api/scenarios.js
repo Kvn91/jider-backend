@@ -18,7 +18,7 @@ router
   .delete(scenariosController.removeCharacter);
 
 router
-  .route("/:id")
+  .route("/:scenarioId")
   .get(scenariosController.getScenario)
   // .delete(verifyRoles(ROLES_LIST.Admin), scenariosController.deleteScenario)
   .delete(scenariosController.deleteScenario);

@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const Scenario = require("../models/Scenario");
 
 // @desc Get all scenarios
@@ -9,19 +10,19 @@ const getAllScenarios = async (req, res) => {
 };
 
 // @desc Get one scenario
-// @route GET /scenarios/:id
+// @route GET /scenarios/:scenarioId
 // @access Private
 const getScenario = async (req, res) => {
-  if (!req?.params?.id)
+  const _id = req?.params?.scenarioId;
+  if (!_id)
     return res.status(400).json({ message: "Le paramètre ID est requis" });
-  if (!Number.isInteger(Number(req.params.id)))
+
+  if (!mongoose.isValidObjectId(_id))
     return res
       .status(400)
-      .json({ message: "Le paramètre ID est au mauvais format" });
+      .json({ message: "Le paramètre ID n'est pas au bon format" });
 
-  // @TODO use "_id"
-  // const scenario = await Scenario.findOne({_id: req.params.id}).exec();
-  const scenario = await Scenario.findOne({ id: req.params.id }).exec();
+  const scenario = await Scenario.findOne({ _id }).exec();
   if (!scenario)
     return res
       .status(404)
@@ -35,15 +36,14 @@ const getScenario = async (req, res) => {
 // @access Private
 const createScenario = async (req, res) => {
   let errors = [];
+  const { title, description } = req.body;
 
-  if (!req?.body?.id) errors.push("Un ID est requis");
-  if (!req?.body?.title) errors.push("Le titre est requis");
-  if (!req?.body?.description) errors.push("La description est requise");
+  if (!title) errors.push("Le titre est requis");
+  if (!description) errors.push("La description est requise");
 
   if (errors.length > 0) return res.status(400).json({ errors });
 
   const scenario = await Scenario.create({
-    id: req.body.id,
     title: req.body.title,
     description: req.body.description,
   });
@@ -59,13 +59,18 @@ const createScenario = async (req, res) => {
 // @route PUT /scenarios
 // @access Private
 const updateScenario = async (req, res) => {
-  const { id, title, description } = req.body;
-  if (!id)
+  const { scenarioId: _id, title, description } = req.body;
+  if (!_id)
     return res.status(400).json({ message: "Le paramètre ID est requis" });
 
-  const scenario = await Scenario.findOne({ id }).exec();
+  if (!mongoose.isValidObjectId(_id))
+    return res
+      .status(400)
+      .json({ message: "Le paramètre ID n'est pas au bon format" });
+
+  const scenario = await Scenario.findOne({ _id }).exec();
   if (!scenario)
-    return res.status(404).json({ message: `Scénario ${id} introuvable` });
+    return res.status(404).json({ message: `Scénario ${_id} introuvable` });
 
   if (title) scenario.title = title;
   if (description) scenario.description = description;
@@ -76,19 +81,22 @@ const updateScenario = async (req, res) => {
 };
 
 // @desc Delete a scenario
-// @route DELETE /scenarios/id
+// @route DELETE /scenarios/:scenarioId
 // @access Private
 const deleteScenario = async (req, res) => {
-  if (!req?.params?.id)
+  const _id = req?.params?.scenarioId;
+  console.log("delete scenario id", _id);
+  if (!_id)
     return res.status(400).json({ message: "Le paramètre ID est requis" });
 
-  // @TODO use "_id"
-  // const scenario = await Scenario.findOne({_id: req.params.id}).exec();
-  const scenario = await Scenario.findOne({ id: req.params.id }).exec();
-  if (!scenario)
+  if (!mongoose.isValidObjectId(_id))
     return res
-      .status(404)
-      .json({ message: `Scénario ${scenarioId} introuvable` });
+      .status(400)
+      .json({ message: "Le paramètre ID n'est pas au bon format" });
+
+  const scenario = await Scenario.findOne({ _id }).exec();
+  if (!scenario)
+    return res.status(404).json({ message: `Scénario ${_id} introuvable` });
 
   await scenario.deleteOne();
 
@@ -100,24 +108,23 @@ const deleteScenario = async (req, res) => {
 // @access Private
 const addCharacter = async (req, res) => {
   let errors = [];
+  const { scenarioId, name, description } = req.body;
 
-  if (!req?.body?.scenarioId) errors.push("Un ID scénario est requis");
-  if (!req?.body?.characterId) errors.push("Un ID personnage est requis");
-  if (!req?.body?.name) errors.push("Le nom est requis");
-  if (!req?.body?.description) errors.push("La description est requise");
+  if (!scenarioId) errors.push("Un ID scénario est requis");
+  if (!name) errors.push("Le nom est requis");
+  if (!description) errors.push("La description est requise");
+
+  if (!mongoose.isValidObjectId(scenarioId))
+    errors.push("Le paramètre ID n'est pas au bon format");
 
   if (errors.length > 0) return res.status(400).json({ errors });
 
-  const scenario = await Scenario.findOne({ id: req.body.scenarioId }).exec();
-  if (!scenario)
-    return res
-      .status(404)
-      .json({ message: `Scénario ${scenarioId} introuvable` });
+  const scenario = await Scenario.findOne({ _id: scenarioId }).exec();
+  if (!scenario) errors.push(`Scénario ${scenarioId} introuvable`);
 
   await scenario.characters.push({
-    id: req.body.characterId,
-    name: req.body.name,
-    description: req.body.description,
+    name,
+    description,
   });
 
   await scenario.save();
@@ -130,25 +137,27 @@ const addCharacter = async (req, res) => {
 // @access Private
 const removeCharacter = async (req, res) => {
   let errors = [];
+  const { scenarioId, characterId } = req.body;
 
-  if (!req?.body?.scenarioId) errors.push("Un ID scénario est requis");
-  if (!req?.body?.characterId) errors.push("Un ID personnage est requis");
+  if (!scenarioId) errors.push("Un ID scénario est requis");
+  if (!characterId) errors.push("Un ID personnage est requis");
+
+  if (
+    !mongoose.isValidObjectId(scenarioId) ||
+    !mongoose.isValidObjectId(characterId)
+  )
+    errors.push("Le paramètre ID n'est pas au bon format");
+
+  const scenario = await Scenario.findOne({ _id: scenarioId }).exec();
+  if (!scenario) errors.push(`Scénario ${scenarioId} introuvable`);
+
+  const character = await Scenario.findOne({ _id: characterId }).exec();
+  if (!character) errors.push(`Personnage ${characterId} introuvable`);
 
   if (errors.length > 0) return res.status(400).json({ errors });
 
-  const scenario = await Scenario.findOne({ id: req.body.scenarioId }).exec();
-  if (!scenario)
-    return res
-      .status(404)
-      .json({ message: `Scénario ${req.body.scenarioId} introuvable` });
-
-  const character = await scenario.characters.id(req.body.characterId);
-  if (!character)
-    return res
-      .status(404)
-      .json({ message: `Personnage ${req.body.characterId} introuvable` });
-
-  await scenario.characters.id(req.body.characterId).deleteOne();
+  await scenario.characters.id(characterId).deleteOne();
+  await scenario.save();
 
   res.json("Personnage supprimé !");
 };

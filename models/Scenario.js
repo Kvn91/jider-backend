@@ -4,10 +4,6 @@ const Schema = mongoose.Schema;
 
 const scenarioSchema = new Schema(
   {
-    id: {
-      type: Number,
-      required: true,
-    },
     title: {
       type: String,
       required: true,

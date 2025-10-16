@@ -3,10 +3,6 @@ const Schema = mongoose.Schema;
 
 const characterSchema = new Schema(
   {
-    id: {
-      type: Number,
-      required: true,
-    },
     name: {
       type: String,
       required: true,
