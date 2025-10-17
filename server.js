@@ -35,7 +35,7 @@ app.use("/auth", require("./routes/auth"));
 app.use("/refresh", require("./routes/refresh"));
 app.use("/logout", require("./routes/logout"));
 // Apply authentication
-// app.use(verifyJWT);
+app.use(verifyJWT);
 app.use("/scenarios", require("./routes/api/scenarios"));
 
 app.all("*", (req, res) => {
