@@ -2,8 +2,6 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const accessTokenDuration = 900; // 15 minutes
-
 // @desc Handle the login
 // @route POST /auth
 const handleLogin = async (req, res) => {
@@ -20,7 +18,6 @@ const handleLogin = async (req, res) => {
   const match = await bcrypt.compare(pwd, foundUser.password);
   if (match) {
     const roles = Object.values(foundUser.roles);
-    // Create access token
     const accessToken = jwt.sign(
       {
         UserInfo: {
@@ -29,7 +26,7 @@ const handleLogin = async (req, res) => {
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: accessTokenDuration }
+      { expiresIn: +process.env.ACCESS_TOKEN_EXPIRATION_TIME }
     );
     // Create refresh token
     let newRefreshToken = jwt.sign(
@@ -76,10 +73,11 @@ const handleLogin = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.json({
+    return res.json({
       success: `User ${user} logged in !`,
+      username: foundUser.username,
       accessToken,
-      expiresIn: accessTokenDuration,
+      expiresIn: +process.env.ACCESS_TOKEN_EXPIRATION_TIME,
     });
   } else {
     return res.status(401).json({ message: "Wrong password" });

@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 
 // @desc Handle refreshing of the access token and the refresh token
 // when the access token has expired
-// @route POST /refresh
+// @route GET /refresh
 const handleRefreshToken = async (req, res) => {
   const cookies = req.cookies;
 
@@ -63,7 +63,7 @@ const handleRefreshToken = async (req, res) => {
           },
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "10m" }
+        { expiresIn: +process.env.ACCESS_TOKEN_EXPIRATION_TIME }
       );
       // Create a new refresh token
       const newRefreshToken = jwt.sign(
@@ -82,7 +82,12 @@ const handleRefreshToken = async (req, res) => {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
-      return res.json({ roles, accessToken });
+      return res.json({
+        success: `User token refreshed`,
+        username: foundUser.username,
+        accessToken,
+        expiresIn: +process.env.ACCESS_TOKEN_EXPIRATION_TIME,
+      });
     }
   );
 };
